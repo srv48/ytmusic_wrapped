@@ -1,4 +1,5 @@
 # YouTube Music Year Wrapper
+## NOTE: this currently doesn't grab all videos. Some videos get saved in the history missing some fields and need an extra API call to grab the channel name and title. I'm working on the best way to handle these without too many API calls, and by the time I finish I might just have an entirely new script.
 A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
