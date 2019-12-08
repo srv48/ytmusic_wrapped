@@ -1,4 +1,4 @@
-# YoutTube Music Year Wrapper
+# YouTube Music Year Wrapper
 A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
