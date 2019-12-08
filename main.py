@@ -3,11 +3,11 @@ import datetime
 import sys, getopt
 import json
 import requests
+import re
 
-expect = 2018
+expect = datetime.datetime.now().year
 verbose = False
 duration = False
-lastFmToken = ""
 
 def flags():
 	opts, args = getopt.getopt(sys.argv[2:], "d:v", ["duration="])
@@ -18,35 +18,48 @@ def flags():
 		elif o in ("-d", "--duration"):
 			global duration
 			duration = True
-			global lastFmToken
-			lastFmToken = token
+			global ytAPIkey
+			ytAPIkey = token
 
 def i18n_string(string):
 	fr = string[:8]
-	en = string[:11]
+	en = string[:7]
 	if (fr.encode("utf-8") == "A écouté"):
 		return True
-	elif (en.encode("utf-8") == "Listened to"):
+	elif (en.encode("utf-8") == "Watched"):
 		return True
 	else:
 		return False
 
 def i18n_title(title):
 	fr = title[:8]
-	en = title[:11]
+	en = title[:7]
 	if (fr.encode("utf-8") == "A écouté"):
 		return title[9:]
-	elif (en.encode("utf-8") == "Listened to"):
-		return title[12:]
+	if (en.encode("utf-8") == "Watched"):
+		return title[8:]
+        
+def il8n_header(header):
+    if (header.encode("utf-8") == "YouTube Music"):
+        return True
+    else:
+        return False
+        
+def il8n_url(url):
+    str = url[32:]
+    return str
 
-def should_not_ignore(title, year, expect):
-	if (i18n_string(title)):
-		if (year[:4].encode("utf-8") == str(expect)):
-			return True
-		else:
-			False
-	else:
-		return False
+def should_not_ignore(title, year, header, expect):
+    if (il8n_header(header)):
+        if (i18n_string(title)):
+            if (year[:4].encode("utf-8") == str(expect)):
+                return True
+            else:
+                False
+        else:
+            return False
+    else:
+        return False
 
 def open_file():
 	if (sys.argv[1].endswith('.json')):
@@ -63,17 +76,17 @@ def open_file():
 def parse_json(file, cursor):
 	json_object = json.load(file)
 	for obj in json_object:
-		if (should_not_ignore(obj['title'], obj['time'], expect) and 'description' in obj):
-			cursor.execute("""INSERT INTO songs(title, artist, year) VALUES(?, ?, ?)""", (i18n_title(obj['title']), obj['description'], obj['time']))
+		if (should_not_ignore(obj['title'], obj['time'], obj['header'], expect) and 'subtitles' in obj):
+			cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", (i18n_title(obj['title']), obj['subtitles'][0]['name'], obj['time'], il8n_url(obj['titleUrl'])))
 
 def print_db(cursor):
 	#Print results from DB
 	print ("####################Full List#####################")
-	cursor.execute("""SELECT id, artist, title, year FROM songs""")
+	cursor.execute("""SELECT id, artist, title, year, url FROM songs""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
-		print('{0} : {1} - {2} - {3}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3]))
+		print('{0} : {1} - {2} - {3} - {4}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3], row[4].encode("utf-8")))
 
 def prepare_tops(cursor):
 	#Artist top
@@ -90,10 +103,10 @@ def prepare_tops(cursor):
 
 def delete_duplicate(cursor):
 	#Doublon Deletor
-	cursor.execute("""SELECT title, COUNT(*), artist FROM songs GROUP BY title""")
+	cursor.execute("""SELECT title, COUNT(*), artist, url FROM songs GROUP BY title""")
 	result_doublon = cursor.fetchall()
 	for res_doublon in result_doublon:
-		cursor.execute("""INSERT INTO report(title, artist, occurence) VALUES(?, ?, ?)""", (res_doublon[0], res_doublon[2], res_doublon[1]))
+            cursor.execute("""INSERT INTO report(title, artist, occurence, url) VALUES(?, ?, ?, ?)""", (res_doublon[0], res_doublon[2], res_doublon[1], res_doublon[3]))
 
 def print_full_tops(cursor):
 	print ("####################Top Artists#####################")
@@ -109,15 +122,32 @@ def print_full_tops(cursor):
 	for row in rows:
 		datetime.datetime.now()
 		print('{0} - {1}'.format(row[0].encode("utf-8"), row[1]))
+        
+def parse_duration(duration):
+    timestr = duration.encode("utf-8")
+    time = re.findall(r'\d+', timestr) 
+    length = len(time)
+    if length > 4:
+        return 0
+    if length == 4:
+        return ((int(time[0])*24*60*60)+(int(time[1])*60*60)+int(time[2]*60)+(int(time[3])))
+    elif length == 3:
+        return ((int(time[0])*60*60)+(int(time[1])*60)+(int(time[2])))
+    elif length == 2:
+        return ((int(time[0])*60)+(int(time[1])))
+    elif length == 1:
+        return (int(time[0]))
+    else:
+        return 0
 
 def get_duration(cursor):
 	#Count duration
-	cursor.execute("""SELECT id, artist, title FROM report""")
+	cursor.execute("""SELECT id, artist, title, url FROM report""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
-		parameters = {"method": "track.getInfo", "api_key": lastFmToken, "artist": row[1].encode("utf-8"), "track": row[2].encode("utf-8"), "format": "json"}
-		response = requests.get("http://ws.audioscrobbler.com//2.0/", params=parameters)
+		parameters = {"part": "contentDetails", "id": row[3].encode("utf-8"), "key": ytAPIkey}
+		response = requests.get("https://www.googleapis.com/youtube/v3/videos", params=parameters)
 		if (response.status_code == 200):
 			json_parsed = response.json()
 			if ('error' in json_parsed):
@@ -127,7 +157,7 @@ def get_duration(cursor):
 			else:
 				if verbose:
 					print ('duration {0}'.format(row[0]))
-				duration = json_parsed['track']['duration']
+				duration = parse_duration(json_parsed['items'][0]['contentDetails']['duration'])
 				cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (duration, row[0]))
 
 	#Calcul total duration
@@ -149,25 +179,25 @@ def get_duration(cursor):
 
 def gen_html_report(cursor, data, expect):
 	sys.stdout = open('report.html', 'w')
-	print ("""<!DOCTYPE html><html><head><title>Wrapped</title><style type="text/css">body{background-color: #f58d15;}.center-div{position: absolute; margin: auto; top: 0; right: 0; bottom: 0; left: 0; width: 50%; height: 80%; background-color: #503651; border-radius: 3px; padding: 10px;}.play_logo{width: 7%;position: relative;top: 30px;left: 50px;}.title_logo{width: 30%;position: relative;top: 30px;left: 50px;}.right_title{position: absolute;font-family: "Product Sans";top: 55px;right: 10%;font-size: 2em;color: #f2481d;}.container{position: relative;top: 13%;left: 53px;}.minutes_title{font-family: "Product Sans";font-size: 2em;color: #f58d15;}.minutes{font-family: "Product Sans";font-size: 6em;color: #f58d15;}.row{display: flex;}.column{flex: 50%;}.list{font-family: "Roboto";font-size: 1.5em;line-height: 30px;color: #f58d15;}</style></head><body><div class="center-div"><img src="play_logo.png" class="play_logo"><img src="title.png" class="title_logo"/><span class="right_title">""")
+	print ("""<!DOCTYPE html><html><head><title>Wrapped</title><style type="text/css">body{background-color: #000000;}.center-div{position: absolute; margin: auto; top: 0; right: 0; bottom: 0; left: 0; width: 50%; height: 90%; background-color: #000000; border-radius: 3px; padding: 10px;}.ytm_logo{width: 15%;position: relative;top: 30px;left: 40px;}.title_logo{width: 30%;position: relative;top: 30px;left: 60px;}.right_title{position: absolute;font-family: "Product Sans";top: 55px;right: 10%;font-size: 2em;color: #ffffff;}.container{position: relative;top: 13%;left: 53px;}.minutes_title{font-family: "Product Sans";font-size: 2em;color: #ffffff;}.minutes{font-family: "Product Sans";font-size: 6em;color: #ffffff;}.row{display: flex;}.column{flex: 50%;}.list{font-family: "Roboto";font-size: 1.5em;line-height: 30px;color: #ffffff;}</style></head><body><div class="center-div"><img src="ytm_logo.png" class="ytm_logo"><img src="title.png" class="title_logo"/><span class="right_title">""")
 	print (expect)
 	print (""" Wrapped</span><div class="container"><div class="minutes_title">Minutes Listened</div><div class="minutes">""")
 	if duration:
-		print (data[0]/60000)
+		print (data[0]/60)
 	else:
 		print("N/A")
 	print ("""</div><br><br><div class="row"><div class="column"><div class="minutes_title">Top Artists</div><div class="list">""")
-	cursor.execute("""SELECT artist FROM artist_count ORDER by occurence DESC LIMIT 10""")
+	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence DESC LIMIT 10""")
 	rows = cursor.fetchall()
 	for row in rows:
 		print ("<br>")
-		print('{0}'.format(row[0].encode("utf-8")))
+		print('{0} - {1} songs'.format(row[0].encode("utf-8"), row[1]))
 	print ("""</div></div><div class="column"><div class="minutes_title">Top Songs</div><div class="list">""")
-	cursor.execute("""SELECT title FROM songs_count ORDER by occurence DESC LIMIT 10""")
+	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC LIMIT 10""")
 	rows = cursor.fetchall()
 	for row in rows:
 		print ("<br>")
-		print ('{0}'.format(row[0].encode("utf-8")))
+		print ('{0} - {1} plays'.format(row[0].encode("utf-8"), row[1]))
 	print ("""</div></div></div></div></div></body></html>""")
 	sys.stdout.close()
 
@@ -207,7 +237,7 @@ def main():
 
 	file = open_file()
 
-	print ("Welcome on GMusic Year Wrapper.")
+	print ("Welcome to YouTube Music Year Wrapper.")
 	print ("We are now processing your file.")
 	print ("No more informations will be displayed during this process. You can check log.dat at any time to check progression.")
 
