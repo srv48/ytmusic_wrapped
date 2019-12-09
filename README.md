@@ -1,5 +1,5 @@
 # YouTube Music Year Wrapper
-## NOTE: this currently doesn't grab all videos. Some videos get saved in the history missing some fields and need an extra API call to grab the channel name and title. I'm working on the best way to handle these without too many API calls, and by the time I finish I might just have an entirely new script.
+## NOTE: while this works, Google has an API quota set for these requests and each operation is costly. Running on my own history of 2016 unique songs (by url) cost me 7.5k out of the 10k quota. Getting duration costs 3 units, 5 if the title needs to be grabbed due to the anomalies in the watch history JSON. Gonna look into using plain HTML requests to get titles at least, but I don't think anything can be done for duration calc.
 A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
@@ -35,4 +35,4 @@ You can now launch the script with the following options :
 `-d [YouTube API key]` to enable duration calculation
 <br>
 <br>
-Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can add several hours to the process. YouTube also has an API limit which this will hit against, though I don't know the probability of actually hitting it.
+Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can add several hours to the process.
