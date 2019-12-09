@@ -39,18 +39,12 @@ def i18n_title(title):
 	if (en.encode("utf-8") == "Watched"):
 		return title[8:]
         
-def il8n_header(header):
-    if (header.encode("utf-8") == "YouTube Music"):
-        return True
-    else:
-        return False
-        
 def il8n_url(url):
     str = url[32:]
     return str
 
 def should_not_ignore(title, year, header, expect):
-    if (il8n_header(header)):
+    if (header.encode("utf-8") == "YouTube Music"):
         if (i18n_string(title)):
             if (year[:4].encode("utf-8") == str(expect)):
                 return True
@@ -74,40 +68,64 @@ def open_file():
 		sys.exit()
 
 def parse_json(file, cursor):
-	json_object = json.load(file)
-	for obj in json_object:
-		if (should_not_ignore(obj['title'], obj['time'], obj['header'], expect) and 'subtitles' in obj):
-			cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", (i18n_title(obj['title']), obj['subtitles'][0]['name'], obj['time'], il8n_url(obj['titleUrl'])))
+    json_object = json.load(file)
+    for obj in json_object:
+        if (should_not_ignore(obj['title'], obj['time'], obj['header'], expect)):
+            if ('subtitles' in obj):
+                cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", (i18n_title(obj['title']), obj['subtitles'][0]['name'], obj['time'], il8n_url(obj['titleUrl'])))
+            elif ('titleUrl' in obj):
+                cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", ("parseme", "parseme", obj['time'], il8n_url(obj['titleUrl'])))
 
 def print_db(cursor):
 	#Print results from DB
-	print ("####################Full List#####################")
-	cursor.execute("""SELECT id, artist, title, year, url FROM songs""")
-	rows = cursor.fetchall()
-	for row in rows:
-		datetime.datetime.now()
-		print('{0} : {1} - {2} - {3} - {4}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3], row[4].encode("utf-8")))
+    print ("####################Full List#####################")
+    cursor.execute("""SELECT id, artist, title, url, year FROM songs""")
+    rows = cursor.fetchall()
+    for row in rows:
+        datetime.datetime.now()
+        print('{0} : {1} - {2} - {4} - {3}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3].encode("utf-8"), row[4]))
+    print ("####################Non-Duplicate List#####################")
+    cursor.execute("""SELECT id, artist, title, url, occurence FROM report""")
+    rows = cursor.fetchall()
+    for row in rows:
+        datetime.datetime.now()
+        print('{0} : {1} - {2} - {3} - {4}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3].encode("utf-8"), row[4]))
 
 def prepare_tops(cursor):
 	#Artist top
-	cursor.execute("""SELECT artist, COUNT(*) FROM songs GROUP BY artist""")
-	result = cursor.fetchall()
-	for res in result:
-		cursor.execute("""INSERT INTO artist_count(artist, occurence) VALUES(?, ?)""", (res[0], res[1]))
+    cursor.execute("""SELECT artist FROM report GROUP BY artist""")
+    result = cursor.fetchall()
+    for res in result:
+        occurences = 0
+        cursor.execute("""SELECT occurence FROM report WHERE artist = ?""", (res[0],))
+        artocc = cursor.fetchall()
+        for occ in artocc:
+            occurences += occ[0]
+        cursor.execute("""INSERT INTO artist_count(artist, occurence) VALUES(?, ?)""", (res[0], occurences))
 
 	#Song Top
-	cursor.execute("""SELECT title, COUNT(*) FROM songs GROUP BY title""")
-	result_song = cursor.fetchall()
-	for res_song in result_song:
-		cursor.execute("""INSERT INTO songs_count(title, occurence) VALUES(?, ?)""", (res_song[0], res_song[1]))
+    cursor.execute("""SELECT title, occurence FROM report GROUP BY url""")
+    result_song = cursor.fetchall()
+    for res_song in result_song:
+        cursor.execute("""INSERT INTO songs_count(title, occurence) VALUES(?, ?)""", (res_song[0], res_song[1]))
 
 def delete_duplicate(cursor):
 	#Doublon Deletor
-	cursor.execute("""SELECT title, COUNT(*), artist, url FROM songs GROUP BY title""")
-	result_doublon = cursor.fetchall()
-	for res_doublon in result_doublon:
-            cursor.execute("""INSERT INTO report(title, artist, occurence, url) VALUES(?, ?, ?, ?)""", (res_doublon[0], res_doublon[2], res_doublon[1], res_doublon[3]))
-
+    cursor.execute("""SELECT title, COUNT(*), artist, url FROM songs GROUP BY url""")
+    result_doublon = cursor.fetchall()
+    for res_doublon in result_doublon:
+        cursor.execute("""INSERT INTO report(title, artist, occurence, url, duration) VALUES(?, ?, ?, ?, 0)""", (res_doublon[0], res_doublon[2], res_doublon[1], res_doublon[3]))
+    cursor.execute("""SELECT id, artist, title, url FROM report""")
+    rows = cursor.fetchall()
+    for row in rows:
+        if (row[2].encode("utf-8") == "parseme"):
+           cursor.execute("""SELECT artist, title FROM songs WHERE url = ? AND title != ?""",(row[3],"parseme"))
+           match = cursor.fetchone()
+           if match:
+               cursor.execute("""UPDATE report SET artist = ?, title = ? WHERE id = ?""",(match[0],match[1],row[0]))
+    if not duration:
+        cursor.execute("""DELETE FROM report WHERE title = 'parseme'""")
+        
 def print_full_tops(cursor):
 	print ("####################Top Artists#####################")
 	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence DESC""")
@@ -141,41 +159,52 @@ def parse_duration(duration):
         return 0
 
 def get_duration(cursor):
-	#Count duration
-	cursor.execute("""SELECT id, artist, title, url FROM report""")
-	rows = cursor.fetchall()
-	for row in rows:
-		datetime.datetime.now()
-		parameters = {"part": "contentDetails", "id": row[3].encode("utf-8"), "key": ytAPIkey}
-		response = requests.get("https://www.googleapis.com/youtube/v3/videos", params=parameters)
-		if (response.status_code == 200):
-			json_parsed = response.json()
-			if ('error' in json_parsed):
-				print "error found"
-				cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (0, row[0]))
-				continue
-			else:
-				if verbose:
-					print ('duration {0}'.format(row[0]))
-				duration = parse_duration(json_parsed['items'][0]['contentDetails']['duration'])
-				cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (duration, row[0]))
-
-	#Calcul total duration
-	if verbose:
-		print ("####################Full List WITHOUT DOUBLON AND DURATION#####################")
-	total_duration = 0
-	error_rate = 0
-	cursor.execute("""SELECT id, artist, title, duration, occurence FROM report""")
-	rows = cursor.fetchall()
-	for row in rows:
-		datetime.datetime.now()
-		song_count = row[0]
-		if verbose:
-			print('{0} : {1} - {2}- {3} - occurence : {4}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3], row[4]))
-		total_duration += row[3] * row[4]
-		if row[3] == 0:
-			error_rate = error_rate + 1
-	return (total_duration, error_rate, song_count)
+    #Count duration
+    cursor.execute("""SELECT id, artist, title, url FROM report""")
+    rows = cursor.fetchall()
+    for row in rows:
+        datetime.datetime.now()
+        artist = row[1]
+        title = row[2]
+        if (row[2].encode("utf-8")=="parseme"):
+            parameters = {"part": "contentDetails,snippet", "id": row[3].encode("utf-8"), "key": ytAPIkey}
+        else:
+            parameters = {"part": "contentDetails", "id": row[3].encode("utf-8"), "key": ytAPIkey}
+        response = requests.get("https://www.googleapis.com/youtube/v3/videos", params=parameters)
+        if (response.status_code == 200):
+            json_parsed = response.json()
+            if (json_parsed['pageInfo']['totalResults'] == 0):
+                print "video not found"
+                if (row[1].encode("utf-8")=="parseme"):
+                    title = "Unavailable Video"
+                    artist = "Unknown Artist"
+                    cursor.execute("""UPDATE report SET duration = ?, artist = ?, title = ? WHERE id = ?""", (0, artist, title, row[0]))
+                    continue
+            else:
+                if verbose:
+                    print ('duration {0}'.format(row[0]))
+                duration = parse_duration(json_parsed['items'][0]['contentDetails']['duration'])
+                if (row[1].encode("utf-8")=="parseme"):
+                    artist = json_parsed['items'][0]['snippet']['channelTitle']
+                    title = json_parsed['items'][0]['snippet']['title']
+                    cursor.execute("""UPDATE report SET duration = ?, artist = ?, title = ? WHERE id = ?""", (duration, artist, title, row[0]))
+                    
+    #Calcul total duration
+    if verbose:
+        print ("####################Full List WITHOUT DOUBLON AND DURATION#####################")
+    total_duration = 0
+    error_rate = 0
+    cursor.execute("""SELECT id, artist, title, duration, occurence FROM report""")
+    rows = cursor.fetchall()
+    for row in rows:
+        datetime.datetime.now()
+        song_count = row[0]
+        if verbose:
+            print('{0} : {1} - {2}- {3} - occurence : {4}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3], row[4]))
+        total_duration += row[3] * row[4]
+        if row[3] == 0:
+            error_rate = error_rate + 1
+    return (total_duration, error_rate, song_count)
 
 def gen_html_report(cursor, data, expect):
 	sys.stdout = open('report.html', 'w')
@@ -228,34 +257,34 @@ def gen_report(cursor, data, expect):
 	gen_html_report(cursor, data, expect)
 
 def main():
-	flags()
-	conn = sqlite3.connect('gmusic.db')
-	cursor = conn.cursor()
-	with open('schema.sql') as fp:
-		cursor.executescript(fp.read())
-	data = ""
+    flags()
+    conn = sqlite3.connect('gmusic.db')
+    cursor = conn.cursor()
+    with open('schema.sql') as fp:
+        cursor.executescript(fp.read())
+    data = ""
 
-	file = open_file()
+    file = open_file()
 
-	print ("Welcome to YouTube Music Year Wrapper.")
-	print ("We are now processing your file.")
-	print ("No more informations will be displayed during this process. You can check log.dat at any time to check progression.")
+    print ("Welcome to YouTube Music Year Wrapper.")
+    print ("We are now processing your file.")
+    print ("No more informations will be displayed during this process. You can check log.dat at any time to check progression.")
 
-	if verbose:
-		sys.stdout = open('log.dat', 'w')
-
-	parse_json(file, cursor)
-	if verbose:
-		print_db(cursor)
+    if verbose:
+        sys.stdout = open('log.dat', 'w')
+    parse_json(file, cursor)
+    delete_duplicate(cursor)
+    
+    if verbose:
+        print_db(cursor)
 	prepare_tops(cursor)
 	if verbose:
 		print_full_tops(cursor)
-	delete_duplicate(cursor)
 	if duration:
 		data = get_duration(cursor)
-	if verbose:
-		sys.stdout.close()
-	gen_report(cursor, data, expect)
+    if verbose:
+        sys.stdout.close()
+    gen_report(cursor, data, expect)
 
 if __name__ == "__main__":
 	main()
