@@ -7,7 +7,7 @@ Note : This project is not endorsed by Google
 
 ## To use YouTube Music Year Wrapper
 <br>
-You will need to install python 2.7. I used 2.7.17, so use that version if you want to be super safe.
+You will need to install Python. I used 3.8.0 32bit, so use that version if you want to be super safe.
 Be sure to select the "Add python to PATH" option in the installer.
 <br>
 Once python is installed, open up a console and run `python -m pip install requests` to get the required module for this script.
