@@ -113,46 +113,46 @@ def print_full_tops(cursor):
 		print('{0} - {1}'.format(row[0], row[1]), file = log)
 
 def get_duration(cursor):
-	#Count duration
-	cursor.execute("""SELECT id, artist, title FROM report""")
-	rows = cursor.fetchall()
-    print("Getting duration of " + str(len(rows)) + "songs")
-	for row in rows:
+    #Count duration
+    cursor.execute("""SELECT id, artist, title FROM report""")
+    rows = cursor.fetchall()
+    print("Getting duration of " + str(len(rows)) + " songs")
+    for row in rows:
         print("Getting track " + str(row[0]) + " duration")
-		datetime.datetime.now()
-		parameters = {"method": "track.getInfo", "api_key": lastFmToken, "artist": row[1], "track": row[2], "format": "json"}
-		response = requests.get("https://ws.audioscrobbler.com/2.0/", params=parameters)
-		if (response.status_code == 200):
-			json_parsed = response.json()
-			if ('error' in json_parsed):
-				print("error found", json_parsed, file = log)
-				cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (0, row[0]))
-				continue
-			else:
-				if verbose:
-					print ('duration {0}'.format(row[0]), file = log)
-				duration = json_parsed['track']['duration']
-				cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (duration, row[0]))
-		else:
-			print("Non 200 response code returned, sleeping...", file = log)
-			time.sleep(1)
+        datetime.datetime.now()
+        parameters = {"method": "track.getInfo", "api_key": lastFmToken, "artist": row[1], "track": row[2], "format": "json"}
+        response = requests.get("https://ws.audioscrobbler.com/2.0/", params=parameters)
+        if (response.status_code == 200):
+            json_parsed = response.json()
+            if ('error' in json_parsed):
+                print("error found", json_parsed, file = log)
+                cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (0, row[0]))
+                continue
+            else:
+                if verbose:
+                    print ('duration {0}'.format(row[0]), file = log)
+                duration = json_parsed['track']['duration']
+                cursor.execute("""UPDATE report SET duration = ? WHERE id = ?""", (duration, row[0]))
+        else:
+            print("Non 200 response code returned, sleeping...", file = log)
+            time.sleep(1)
 
 	#Calcul total duration
-	if verbose:
-		print ("####################Full List WITHOUT DOUBLON AND DURATION#####################", file = log)
-	total_duration = 0
-	error_rate = 0
-	cursor.execute("""SELECT id, artist, title, duration, occurence FROM report""")
-	rows = cursor.fetchall()
-	for row in rows:
-		datetime.datetime.now()
-		song_count = row[0]
-		if verbose:
-			print('{0} : {1} - {2}- {3} - occurence : {4}'.format(row[0], row[1], row[2], row[3], row[4]), file = log)
-		total_duration += row[3] * row[4]
-		if row[3] == 0:
-			error_rate = error_rate + 1
-	return (total_duration, error_rate, song_count)
+    if verbose:
+        print ("####################Full List WITHOUT DOUBLON AND DURATION#####################", file = log)
+    total_duration = 0
+    error_rate = 0
+    cursor.execute("""SELECT id, artist, title, duration, occurence FROM report""")
+    rows = cursor.fetchall()
+    for row in rows:
+        datetime.datetime.now()
+        song_count = row[0]
+        if verbose:
+            print('{0} : {1} - {2}- {3} - occurence : {4}'.format(row[0], row[1], row[2], row[3], row[4]), file = log)
+        total_duration += row[3] * row[4]
+        if row[3] == 0:
+            error_rate = error_rate + 1
+    return (total_duration, error_rate, song_count)
 
 def gen_html_report(cursor, data, expect):
 	htmlreport = open('report.html', 'w', encoding="utf8")
