@@ -181,6 +181,7 @@ def get_duration(cursor):
     #Calcul total duration
     if verbose:
         print ("####################Full List WITHOUT DOUBLON AND DURATION#####################")
+    song_count = 0
     total_duration = 0
     error_rate = 0
     cursor.execute("""SELECT id, artist, title, duration, occurence, url FROM report""")
@@ -223,14 +224,14 @@ def gen_report(cursor, data, expect):
 	#Top 10 Report
 	sys.stdout = open('report.dat', 'w')
 	print ("#################### Top Artists #####################")
-	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence""")
+	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence DESC""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
 		print('{0} - {1}'.format(row[0].encode("utf-8"), row[1]))
 
 	print ("#################### Top Songs #####################")
-	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence""")
+	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
