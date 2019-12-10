@@ -22,21 +22,13 @@ def flags():
 			ytAPIkey = token
 
 def i18n_string(string):
-	fr = string[:8]
-	en = string[:7]
-	if (fr.encode("utf-8") == "A écouté"):
-		return True
-	elif (en.encode("utf-8") == "Watched"):
+	if (string[:7].encode("utf-8") == "Watched"):
 		return True
 	else:
 		return False
 
 def i18n_title(title):
-	fr = title[:8]
-	en = title[:7]
-	if (fr.encode("utf-8") == "A écouté"):
-		return title[9:]
-	if (en.encode("utf-8") == "Watched"):
+	if (title[:7].encode("utf-8") == "Watched"):
 		return title[8:]
         
 def il8n_url(url):
@@ -157,50 +149,47 @@ def parse_duration(duration):
         return (int(time[0]))
     else:
         return 0
+        
+def call_api(idlist, cursor):
+    print "api called"
+    parameters = {"part": "contentDetails,snippet", "id": ','.join(idlist), "key": ytAPIkey}
+    response = requests.get("https://www.googleapis.com/youtube/v3/videos", params=parameters)
+    if (response.status_code == 200):
+        json_parsed = response.json()
+        for item in json_parsed['items']:
+            duration = parse_duration(item['contentDetails']['duration'])
+            artist = item['snippet']['channelTitle']
+            title = item['snippet']['title']
+            url = item['id']
+            cursor.execute("""UPDATE report SET duration = ?, artist = ?, title = ? WHERE url = ?""", (duration, artist, title, url))
 
 def get_duration(cursor):
     #Count duration
     cursor.execute("""SELECT id, artist, title, url FROM report""")
     rows = cursor.fetchall()
+    idlist = []
     for row in rows:
-        datetime.datetime.now()
-        artist = row[1]
-        title = row[2]
-        if (row[2].encode("utf-8")=="parseme"):
-            parameters = {"part": "contentDetails,snippet", "id": row[3].encode("utf-8"), "key": ytAPIkey}
-        else:
-            parameters = {"part": "contentDetails", "id": row[3].encode("utf-8"), "key": ytAPIkey}
-        response = requests.get("https://www.googleapis.com/youtube/v3/videos", params=parameters)
-        if (response.status_code == 200):
-            json_parsed = response.json()
-            if (json_parsed['pageInfo']['totalResults'] == 0):
-                print "video not found"
-                if (row[1].encode("utf-8")=="parseme"):
-                    title = "Unavailable Video"
-                    artist = "Unknown Artist"
-                    cursor.execute("""UPDATE report SET duration = ?, artist = ?, title = ? WHERE id = ?""", (0, artist, title, row[0]))
-                    continue
-            else:
-                if verbose:
-                    print ('duration {0}'.format(row[0]))
-                duration = parse_duration(json_parsed['items'][0]['contentDetails']['duration'])
-                if (row[1].encode("utf-8")=="parseme"):
-                    artist = json_parsed['items'][0]['snippet']['channelTitle']
-                    title = json_parsed['items'][0]['snippet']['title']
-                    cursor.execute("""UPDATE report SET duration = ?, artist = ?, title = ? WHERE id = ?""", (duration, artist, title, row[0]))
-                    
+        idlist.append(row[3].encode("utf-8"))
+        if len(idlist) == 50:
+            print ','.join(idlist)
+            call_api(idlist, cursor)
+            idlist = []
+    print ','.join(idlist)
+    call_api(idlist, cursor)
+    cursor.execute("""UPDATE report SET duration = ?, artist = ?, title = ? WHERE title = ?""", (0, "Unknown Artist", "Unavailable Video", "parseme"))
+    
     #Calcul total duration
     if verbose:
         print ("####################Full List WITHOUT DOUBLON AND DURATION#####################")
     total_duration = 0
     error_rate = 0
-    cursor.execute("""SELECT id, artist, title, duration, occurence FROM report""")
+    cursor.execute("""SELECT id, artist, title, duration, occurence, url FROM report""")
     rows = cursor.fetchall()
     for row in rows:
         datetime.datetime.now()
         song_count = row[0]
         if verbose:
-            print('{0} : {1} - {2}- {3} - occurence : {4}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3], row[4]))
+            print('{0} : {1} - {2}- {3} - occurence : {4} - {5}'.format(row[0], row[1].encode("utf-8"), row[2].encode("utf-8"), row[3], row[4], row[5].encode("utf-8")))
         total_duration += row[3] * row[4]
         if row[3] == 0:
             error_rate = error_rate + 1
@@ -234,14 +223,14 @@ def gen_report(cursor, data, expect):
 	#Top 10 Report
 	sys.stdout = open('report.dat', 'w')
 	print ("#################### Top Artists #####################")
-	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence DESC LIMIT 10""")
+	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
 		print('{0} - {1}'.format(row[0].encode("utf-8"), row[1]))
 
 	print ("#################### Top Songs #####################")
-	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC LIMIT 10""")
+	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
@@ -277,11 +266,11 @@ def main():
     
     if verbose:
         print_db(cursor)
-	prepare_tops(cursor)
-	if verbose:
-		print_full_tops(cursor)
 	if duration:
 		data = get_duration(cursor)
+    prepare_tops(cursor)
+    if verbose:
+		print_full_tops(cursor)
     if verbose:
         sys.stdout.close()
     gen_report(cursor, data, expect)
