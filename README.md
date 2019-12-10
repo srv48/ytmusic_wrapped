@@ -1,5 +1,4 @@
 # YouTube Music Year Wrapper
-## NOTE: while this works, Google has an API quota set for these requests and each operation is costly. Running on my own history of 2016 unique songs (by url) cost me 7.5k out of the 10k quota. Getting duration costs 3 units, 5 if the title needs to be grabbed due to the anomalies in the watch history JSON. Gonna look into using plain HTML requests to get titles at least, but I don't think anything can be done for duration calc.
 A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
@@ -7,12 +6,14 @@ Note : This project is not endorsed by Google
 ![alt text](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/master/example_report.png)
 
 ## To use YouTube Music Year Wrapper
-`git clone https://github.com/cinfulsinamon/gmusic_wrapped.git`
 <br>
-`sudo pip install requests`
+You will need to install python 2.7, and use pip to install `requests` package.
 <br>
+Download this repo using git or by downloading the master.zip in browser.
 <br>
-Then download a history file from Google My Activity containing your Play Music History.
+Extract the zip file somewhere you can point a terminal to it.
+<br>
+Then download a history file from Google My Activity containing your YouTube Watch History.
 <br>
 To download a history file: 
 1) <a href="https://takeout.google.com/"> Go here</a>. 
@@ -35,4 +36,4 @@ You can now launch the script with the following options :
 `-d [YouTube API key]` to enable duration calculation
 <br>
 <br>
-Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can add several hours to the process.
+Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can increase this.
