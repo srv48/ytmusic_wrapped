@@ -15,6 +15,7 @@ Extract the zip file somewhere you can point a terminal to it.
 <br>
 Then download a history file from Google My Activity containing your YouTube Watch History.
 <br>
+
 To download a history file: 
 1) <a href="https://takeout.google.com/"> Go here</a>. 
 2) Click `Deselect All` above the first checkbox.
