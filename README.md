@@ -7,7 +7,10 @@ Note : This project is not endorsed by Google
 
 ## To use YouTube Music Year Wrapper
 <br>
-You will need to install python 2.7, and use pip to install `requests` package.
+You will need to install python 2.7. I used 2.7.17, so use that version if you want to be super safe.
+Be sure to select the "Add python to PATH" option in the installer.
+<br>
+Once python is installed, open up a console and run `python -m pip install requests` to get the required module for this script.
 <br>
 Download this repo using git or by downloading the master.zip in browser.
 <br>
@@ -26,7 +29,7 @@ To download a history file:
 7) Click `Deselect All`, and then only check `History`. Click OK. 
 8) Scroll down and hit next step to finish your takeout. 
 
-You will need to extract the `watch-history.json` file from within the archive it generates.
+You will need to extract the `watch-history.json` file from within the archive it generates. Place it in the same folder as the script to make things easier.
 <br><br>
 You can now launch the script with the following options :
 <br>
