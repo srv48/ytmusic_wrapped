@@ -1,35 +1,19 @@
-# YouTube Music Year Wrapper
-A spotify year wrap like for YouTube Music
+# GMusic Year Wrapper
+A spotify year wrap like for Google Play Music
 
 Note : This project is not endorsed by Google
 
-![example of a report](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/master/example_report.png)
+![example report](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/gpm_python3/example_report.jpg)
 
-## To use YouTube Music Year Wrapper
+## To use GMusic Year Wrapper
+`git clone https://github.com/cinfulsinamon/gmusic_wrapped.git`
 <br>
-You will need to install Python. I used 3.8.0 32bit, so use that version if you want to be super safe.
-Be sure to select the "Add python to PATH" option in the installer.
+`sudo pip install requests`
 <br>
-Once python is installed, open up a console and run `python -m pip install requests` to get the required module for this script.
 <br>
-Download this repo using git or by downloading the master.zip in browser.
+Then download a history file from Google My Activity containing your Play Music History.
 <br>
-Extract the zip file somewhere you can point a terminal to it.
-<br>
-Then download a history file from Google My Activity containing your YouTube Watch History.
-<br>
-
-To download a history file: 
-1) <a href="https://takeout.google.com/"> Go here</a>. 
-2) Click `Deselect All` above the first checkbox.
-3) Scroll all the way down to YouTube, and only check that box. 
-4) Click the button that says `Multiple Formats`.
-5) Next to `History`, select the `JSON` option from the dropdown box and Click OK.
-6) Click on the `All YouTube data included` button. 
-7) Click `Deselect All`, and then only check `History`. Click OK. 
-8) Scroll down and hit next step to finish your takeout. 
-
-You will need to extract the `watch-history.json` file from within the archive it generates. Place it in the same folder as the script to make things easier.
+To download a history file <a href="https://takeout.google.com/u/0/?hl=fr&utm_source=google-account&utm_medium=web&pageId=none"> go here</a>. Detailled instructions are avaialble <a href="https://raw.githubusercontent.com/Lolincolc/gmusic_wrapped/master/howto/help.jpg"> here</a>
 <br><br>
 You can now launch the script with the following options :
 <br>
@@ -37,9 +21,7 @@ You can now launch the script with the following options :
 <br>
 `-v` to enable a full detailed log in log.dat
 <br>
-`-d [YouTube API key]` to enable duration calculation
+`-d [LastFm API key]` to enable duration calculation with LastFM API
 <br>
 <br>
-Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can increase this.
-An HTML file with a report formatted like the image above will be generated in the same folder as the script.
-If you want the font to look correct, you'll have to download and install the Roboto and Product Sans fonts.
+Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can add several hours to the process depending on LastFM API speed.
