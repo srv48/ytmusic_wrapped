@@ -3,7 +3,7 @@ A spotify year wrap like for Google Play Music
 
 Note : This project is not endorsed by Google
 
-![example report](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/gpm_python3/example_report.jpg)
+![example report](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/tree/gpm_python3/example_report.jpg)
 
 ## To use GMusic Year Wrapper
 `git clone https://github.com/cinfulsinamon/gmusic_wrapped.git`
