@@ -3,7 +3,7 @@ A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
 
-![alt text](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/master/example_report.png)
+![example of a report](https://raw.githubusercontent.com/cinfulsinamon/gmusic_wrapped/master/example_report.png)
 
 ## To use YouTube Music Year Wrapper
 <br>
@@ -38,3 +38,5 @@ You can now launch the script with the following options :
 <br>
 <br>
 Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can increase this.
+An HTML file with a report formatted like the image above will be generated in the same folder as the script.
+If you want the font to look correct, you'll have to download and install the Roboto and Product Sans fonts.
