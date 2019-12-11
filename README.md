@@ -3,7 +3,7 @@ A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
 
-![example of a report](https://raw.githubusercontent.com/cinfulsinamon/ytmusic_wrapped/master/example_report.png)
+![example of a report](https://raw.githubusercontent.com/cinfulsinamon/ytmusic_wrapped/python3/example_report.png)
 
 ## To use YouTube Music Year Wrapper
 <br>
