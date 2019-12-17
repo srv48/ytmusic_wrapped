@@ -38,6 +38,8 @@ You can now launch the script with the following options :
 `-v` to enable a full detailed log in log.dat
 <br>
 `-d [YouTube API key]` to enable duration calculation
+## NOTE: Running without the duration calculation will give you less accurate numbers for the total plays. 
+This is because your history file may contain entries which do not have a title or channel field, and the only way to fetch these is using the YouTube API with an API key. It will grab as many as it can and try to fill fields from other entries with the same URL, but you must use the `-d` option for the most accurate report which will only leave out removed videos that can't be found in the API.
 <br>
 <br>
 Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can increase this.
