@@ -74,7 +74,6 @@ def print_db(cursor):
 	cursor.execute("""SELECT id, artist, title, year FROM songs""")
 	rows = cursor.fetchall()
 	for row in rows:
-		datetime.datetime.now()
 		print('{0} : {1} - {2} - {3}'.format(row[0], row[1], row[2], row[3]), file = log)
 
 def prepare_tops(cursor):
@@ -102,14 +101,12 @@ def print_full_tops(cursor):
 	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence DESC""")
 	rows = cursor.fetchall()
 	for row in rows:
-		datetime.datetime.now()
 		print('{0} - {1}'.format(row[0], row[1]), file = log)
 
 	print ("####################Top Songs#####################", file = log)
 	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC""")
 	rows = cursor.fetchall()
 	for row in rows:
-		datetime.datetime.now()
 		print('{0} - {1}'.format(row[0], row[1]), file = log)
 
 def get_duration(cursor):
@@ -119,7 +116,6 @@ def get_duration(cursor):
     print("Getting duration of " + str(len(rows)) + " songs")
     for row in rows:
         print("Getting track " + str(row[0]) + " duration")
-        datetime.datetime.now()
         parameters = {"method": "track.getInfo", "api_key": lastFmToken, "artist": row[1], "track": row[2], "format": "json"}
         response = requests.get("https://ws.audioscrobbler.com/2.0/", params=parameters)
         if (response.status_code == 200):
@@ -140,12 +136,12 @@ def get_duration(cursor):
 	#Calcul total duration
     if verbose:
         print ("####################Full List WITHOUT DOUBLON AND DURATION#####################", file = log)
+    song_count = 0
     total_duration = 0
     error_rate = 0
     cursor.execute("""SELECT id, artist, title, duration, occurence FROM report""")
     rows = cursor.fetchall()
     for row in rows:
-        datetime.datetime.now()
         song_count = row[0]
         if verbose:
             print('{0} : {1} - {2}- {3} - occurence : {4}'.format(row[0], row[1], row[2], row[3], row[4]), file = log)
@@ -160,7 +156,7 @@ def gen_html_report(cursor, data, expect):
 	print (expect, file = htmlreport)
 	print (""" Wrapped</span><div class="container"><div class="minutes_title">Minutes Listened</div><div class="minutes">""", file = htmlreport)
 	if duration:
-		print (data[0]/60000, file = htmlreport)
+		print (data[0]//60000, file = htmlreport)
 	else:
 		print("N/A", file = htmlreport)
 	print ("""</div><br><br><div class="row"><div class="column"><div class="minutes_title">Top Artists</div><div class="list">""", file = htmlreport)
@@ -199,8 +195,8 @@ def gen_report(cursor, data, expect):
 	if duration:
 		print ("\n#################### Duration #####################", file = report)
 		print ('Total duration : {0}', data[0], file = report)
-		print ('Total song count : ', data[2], file = report)
-		print ('Error count : ', data[1], file = report)
+		print ('Total song count : {0}', data[2], file = report)
+		print ('Error count : {0}', data[1], file = report)
 		print ('Error rate : {0}%'.format((float(data[1])/data[2])*100), file = report)
 	report.close()
 	gen_html_report(cursor, data, expect)
