@@ -22,23 +22,9 @@ def flags():
 			global ytAPIkey
 			ytAPIkey = token
 
-def i18n_string(string):
-	if (string[:7] == "Watched"):
-		return True
-	else:
-		return False
-
-def i18n_title(title):
-	if (title[:7] == "Watched"):
-		return title[8:]
-        
-def il8n_url(url):
-    str = url[32:]
-    return str
-
 def should_not_ignore(title, year, header, expect):
     if (header == "YouTube Music"):
-        if (i18n_string(title)):
+        if (title[:7] == "Watched"):
             if (year[:4] == str(expect)):
                 return True
             else:
@@ -65,9 +51,9 @@ def parse_json(file, cursor):
     for obj in json_object:
         if (should_not_ignore(obj['title'], obj['time'], obj['header'], expect)):
             if ('subtitles' in obj):
-                cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", (i18n_title(obj['title']), obj['subtitles'][0]['name'], obj['time'], il8n_url(obj['titleUrl'])))
-            elif ('titleUrl' in obj):
-                cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", ("parseme", "parseme", obj['time'], il8n_url(obj['titleUrl'])))
+                cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", (obj['title'][8:], obj['subtitles'][0]['name'], obj['time'], obj['titleUrl'][32:]))
+            elif (('titleUrl' in obj) and (duration)):
+                cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", ("parseme", "parseme", obj['time'], obj['titleUrl'][32:]))
 
 def print_db(cursor):
 	#Print results from DB
@@ -108,14 +94,13 @@ def delete_duplicate(cursor):
     result_doublon = cursor.fetchall()
     for res_doublon in result_doublon:
         cursor.execute("""INSERT INTO report(title, artist, occurence, url, duration) VALUES(?, ?, ?, ?, 0)""", (res_doublon[0], res_doublon[2], res_doublon[1], res_doublon[3]))
-    cursor.execute("""SELECT id, artist, title, url FROM report""")
+    cursor.execute("""SELECT id, artist, title, url FROM report WHERE title = 'parseme'""")
     rows = cursor.fetchall()
     for row in rows:
-        if (row[2] == "parseme"):
-           cursor.execute("""SELECT artist, title FROM songs WHERE url = ? AND title != ?""",(row[3],"parseme"))
-           match = cursor.fetchone()
-           if match:
-               cursor.execute("""UPDATE report SET artist = ?, title = ? WHERE id = ?""",(match[0],match[1],row[0]))
+        cursor.execute("""SELECT artist, title FROM songs WHERE url = ? AND title != ?""",(row[3],"parseme"))
+        match = cursor.fetchone()
+        if match:
+            cursor.execute("""UPDATE report SET artist = ?, title = ? WHERE id = ?""",(match[0],match[1],row[0]))
     if not duration:
         cursor.execute("""DELETE FROM report WHERE title = 'parseme'""")
         
@@ -208,7 +193,7 @@ def gen_html_report(cursor, data, expect):
 	print (str(expect), file = htmlreport)
 	print (""" Wrapped</span><div class="container"><div class="minutes_title">Minutes Listened</div><div class="minutes">""", file = htmlreport)
 	if duration:
-		print (str(data[0]/60), file = htmlreport)
+		print (str(data[0]//60), file = htmlreport)
 	else:
 		print("N/A", file = htmlreport)
 	print ("""</div><br><br><div class="row"><div class="column"><div class="minutes_title">Top Artists</div><div class="list">""", file = htmlreport)
@@ -246,15 +231,15 @@ def gen_report(cursor, data, expect):
 	if duration:
 		print ("\n#################### Duration #####################", file = report)
 		print ('Total duration : {0}'.format(data[0]), file = report)
-		print ('Total song count : '.format(data[2]), file = report)
-		print ('Error count : '.format(data[1]), file = report)
+		print ('Total song count : {0}'.format(data[2]), file = report)
+		print ('Error count : {0}'.format(data[1]), file = report)
 		print ('Error rate : {0}%'.format((float(data[1])/data[2])*100), file = report)
 	report.close()
 	gen_html_report(cursor, data, expect)
 
 def main():
     flags()
-    conn = sqlite3.connect('gmusic.db')
+    conn = sqlite3.connect('ytmusic.db')
     cursor = conn.cursor()
     with open('schema.sql') as fp:
         cursor.executescript(fp.read())
