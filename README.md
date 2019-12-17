@@ -17,6 +17,8 @@ Download this repo using git or by downloading the master.zip in browser.
 Extract the zip file somewhere you can point a terminal to it.
 <br>
 Then download a history file from Google My Activity containing your YouTube Watch History.
+
+### NOTE: You must either switch your account language to English so the script can properly match strings in your history file, or edit the script to match your language. Specifically, you must change the strings and indexes in the `should_not_ignore` function as well as the indexes in the `parse_json` function.
 <br>
 
 To download a history file: 
@@ -38,7 +40,7 @@ You can now launch the script with the following options :
 `-v` to enable a full detailed log in log.dat
 <br>
 `-d [YouTube API key]` to enable duration calculation
-## NOTE: Running without the duration calculation will give you less accurate numbers for the total plays. 
+### NOTE: Running without the duration calculation will give you less accurate numbers for the total plays. 
 This is because your history file may contain entries which do not have a title or channel field, and the only way to fetch these is using the YouTube API with an API key. It will grab as many as it can and try to fill fields from other entries with the same URL, but you must use the `-d` option for the most accurate report which will only leave out removed videos that can't be found in the API.
 <br>
 <br>
