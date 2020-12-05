@@ -1,7 +1,7 @@
 A fork of <a href="https://github.com/cinfulsinamon/ytmusic_wrapped">cinfulsinamon/ytmusic_wrapped</a> with the following modifications:
 
 * Optional `-m` parameter (should be used in combination with `-d`) to show more details: total minutes played for top artists, and total number of plays for top songs
-* Optional `-y/--year parameter` to run the process for a specific year, report files are now suffixed with the year
+* Optional `-y/--year` parameter to run the process for a specific year, report files are now suffixed with the year
 * Generate a new database for each run (my db was erroneously stacking all the data when running different years back-to-back)
 * Remove the " - Topic" noise from the artist names (for some reason all my artists were getting suffixed with this)
 * Formatting fixes and connection cleanup
