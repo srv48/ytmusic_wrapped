@@ -238,8 +238,10 @@ def gen_html_report(cursor, data, analyzeYear):
     for row in rows:
         print("<br>", file=htmlreport)
         if moreDetails:
-            print('{0} - {1} songs ({2} mins)'.format(str(row[0]).replace(
-                ' - Topic', ''), row[1], str(row[2]//60)), file=htmlreport)
+            if duration:
+                print('{0} - {1} songs ({2} mins)'.format(str(row[0]).replace(' - Topic', ''), row[1], str(row[2]//60)), file=htmlreport)
+            else:
+                print('{0} - {1} songs'.format(str(row[0]).replace(' - Topic', ''), row[1]), file=htmlreport)
         else:
             print('{0}'.format(str(row[0]).replace(
                 ' - Topic', '')), file=htmlreport)
