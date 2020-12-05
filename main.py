@@ -8,14 +8,18 @@ import re
 analyzeYear = datetime.datetime.now().year
 verbose = False
 duration = False
+moreDetails = False
 log = open('log.dat', 'w', encoding="utf8")
 
 def flags():
-	opts, args = getopt.getopt(sys.argv[2:], "d:y:v", ["duration=", "year="])
+	opts, args = getopt.getopt(sys.argv[2:], "d:y:mv", ["duration=", "year="])
 	for o, token in opts:
 		if o == "-v":
 			global verbose
 			verbose = True
+		elif o == "-m":
+			global moreDetails
+			moreDetails = True
 		elif o in ("-d", "--duration"):
 			global duration
 			duration = True
@@ -79,17 +83,19 @@ def prepare_tops(cursor):
     result = cursor.fetchall()
     for res in result:
         occurences = 0
-        cursor.execute("""SELECT occurence FROM report WHERE artist = ?""", (res[0],))
+        total_duration = 0
+        cursor.execute("""SELECT occurence, duration FROM report WHERE artist = ?""", (res[0],))
         artocc = cursor.fetchall()
         for occ in artocc:
             occurences += occ[0]
-        cursor.execute("""INSERT INTO artist_count(artist, occurence) VALUES(?, ?)""", (res[0], occurences))
+            total_duration += occ[1]
+        cursor.execute("""INSERT INTO artist_count(artist, occurence, duration) VALUES(?, ?, ?)""", (res[0], occurences, total_duration))
 
 	#Song Top
-    cursor.execute("""SELECT title, occurence FROM report GROUP BY url""")
+    cursor.execute("""SELECT title, artist, occurence FROM report GROUP BY url""")
     result_song = cursor.fetchall()
     for res_song in result_song:
-        cursor.execute("""INSERT INTO songs_count(title, occurence) VALUES(?, ?)""", (res_song[0], res_song[1]))
+        cursor.execute("""INSERT INTO songs_count(title, artist, occurence) VALUES(?, ?, ?)""", (res_song[0], res_song[1], res_song[2]))
 
 def delete_duplicate(cursor):
 	#Doublon Deletor
@@ -116,11 +122,11 @@ def print_full_tops(cursor):
 		print('{0} - {1}'.format(row[0], row[1]), file = log)
 
 	print ("####################Top Songs#####################", file = log)
-	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC""")
+	cursor.execute("""SELECT artist, title, occurence FROM songs_count ORDER by occurence DESC""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
-		print('{0} - {1}'.format(row[0], row[1]), file = log)
+		print('{0} - {1} - {2}'.format(row[0], row[1], row[2]), file = log)
         
 def parse_duration(duration):
     timestr = duration
@@ -200,17 +206,23 @@ def gen_html_report(cursor, data, analyzeYear):
 	else:
 		print("N/A", file = htmlreport)
 	print ("""</div><br><br><div class="row"><div class="column"><div class="minutes_title">Top Artists</div><div class="list">""", file = htmlreport)
-	cursor.execute("""SELECT artist, occurence FROM artist_count ORDER by occurence DESC LIMIT 10""")
+	cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by duration DESC LIMIT 10""")
 	rows = cursor.fetchall()
 	for row in rows:
 		print ("<br>", file = htmlreport)
-		print('{0} - {1} songs'.format(row[0], row[1]), file = htmlreport)
+		if moreDetails:
+			print('{0} - {1} songs ({2} mins)'.format(row[0], row[1], str(row[2]//60)), file = htmlreport)
+		else:
+			print('{0}'.format(str(row[0]).replace(' - Topic', '')), file = htmlreport)
 	print ("""</div></div><div class="column"><div class="minutes_title">Top Songs</div><div class="list">""", file = htmlreport)
-	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC LIMIT 10""")
+	cursor.execute("""SELECT artist, title, occurence FROM songs_count ORDER by occurence DESC LIMIT 10""")
 	rows = cursor.fetchall()
 	for row in rows:
 		print ("<br>", file = htmlreport)
-		print ('{0} - {1} plays'.format(row[0], row[1]), file = htmlreport)
+		if moreDetails:
+			print ('{0} - {1} - {2} plays'.format(row[0], row[1], row[2]), file = htmlreport)
+		else:
+			print ('{0}'.format(row[1]), file = htmlreport)
 	print ("""</div></div></div></div></div></body></html>""", file = htmlreport)
 	htmlreport.close()
 
@@ -225,11 +237,11 @@ def gen_report(cursor, data, analyzeYear):
 		print('{0} - {1}'.format(row[0], row[1]), file = report)
 
 	print ("#################### Top Songs #####################", file = report)
-	cursor.execute("""SELECT title, occurence FROM songs_count ORDER by occurence DESC""")
+	cursor.execute("""SELECT artist, title, occurence FROM songs_count ORDER by occurence DESC""")
 	rows = cursor.fetchall()
 	for row in rows:
 		datetime.datetime.now()
-		print('{0} - {1}'.format(row[0], row[1]), file = report)
+		print('{0} - {1} - {2}'.format(row[0], row[1], row[2]), file = report)
 
 	if duration:
 		print ("\n#################### Duration #####################", file = report)
