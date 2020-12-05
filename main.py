@@ -266,6 +266,8 @@ def main():
     log.close()
     print("Generating final report")
     gen_report(cursor, data, expect)
+    conn.commit()
+    conn.close()
     print("All done!")
 
 if __name__ == "__main__":
