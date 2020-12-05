@@ -232,8 +232,10 @@ def gen_html_report(cursor, data, analyzeYear):
     else:
         print("N/A", file=htmlreport)
     print("""</div><br><br><div class="row"><div class="column"><div class="minutes_title">Top Artists</div><div class="list">""", file=htmlreport)
-    cursor.execute(
-        """SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by duration DESC LIMIT 10""")
+    if duration:
+        cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by duration DESC LIMIT 10""")
+    else:
+        cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by occurence DESC LIMIT 10""")
     rows = cursor.fetchall()
     for row in rows:
         print("<br>", file=htmlreport)
