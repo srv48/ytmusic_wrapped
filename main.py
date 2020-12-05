@@ -259,7 +259,8 @@ def gen_html_report(cursor, data, analyzeYear):
 
 def gen_report(cursor, data, analyzeYear):
     # Top 10 Report
-    report = open('report.dat', 'w', encoding=("utf8"))
+    report = open('report_{0}.dat'.format(
+        str(analyzeYear)), 'w', encoding=("utf8"))
     print("#################### Top Artists #####################", file=report)
     cursor.execute(
         """SELECT artist, occurence FROM artist_count ORDER by occurence DESC""")
