@@ -1,7 +1,7 @@
-A fork of ![cinfulsinamon/ytmusic_wrapped](https://github.com/cinfulsinamon/ytmusic_wrapped) with the following modifications:
+A fork of <a href="https://github.com/cinfulsinamon/ytmusic_wrapped">cinfulsinamon/ytmusic_wrapped</a> with the following modifications:
 
 * Optional `-m` parameter (should be used in combination with `-d`) to show more details: total minutes played for top artists, and total number of plays for top songs
-* Optional `-y/--year parameter` to run the process for a specific year
+* Optional `-y/--year parameter` to run the process for a specific year, report files are now suffixed with the year
 * Generate a new database for each run (my db was erroneously stacking all the data when running different years back-to-back)
 * Remove the " - Topic" noise from the artist names (for some reason all my artists were getting suffixed with this)
 * Formatting fixes and connection cleanup
@@ -33,7 +33,7 @@ Then download a history file from Google My Activity containing your YouTube Wat
 <br>
 
 To download a history file: 
-1) <a href="https://takeout.google.com/"> Go here</a>. 
+1) <a href="https://takeout.google.com/">Go here</a>. 
 2) Click `Deselect All` above the first checkbox.
 3) Scroll all the way down to YouTube, and only check that box. 
 4) Click the button that says `Multiple Formats`.
