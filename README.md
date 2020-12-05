@@ -1,3 +1,5 @@
+# YouTube Music Year Wrapper
+
 A fork of <a href="https://github.com/cinfulsinamon/ytmusic_wrapped">cinfulsinamon/ytmusic_wrapped</a> with the following modifications:
 
 * Optional `-m` parameter (should be used in combination with `-d`) to show more details: total minutes played for top artists, and total number of plays for top songs
@@ -6,10 +8,9 @@ A fork of <a href="https://github.com/cinfulsinamon/ytmusic_wrapped">cinfulsinam
 * Remove the " - Topic" noise from the artist names (for some reason all my artists were getting suffixed with this)
 * Formatting fixes and connection cleanup
 
+
 Original description below:
 
-
-# YouTube Music Year Wrapper
 A spotify year wrap like for YouTube Music
 
 Note : This project is not endorsed by Google
