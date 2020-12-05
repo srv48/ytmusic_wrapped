@@ -211,7 +211,7 @@ def gen_html_report(cursor, data, analyzeYear):
 	for row in rows:
 		print ("<br>", file = htmlreport)
 		if moreDetails:
-			print('{0} - {1} songs ({2} mins)'.format(row[0], row[1], str(row[2]//60)), file = htmlreport)
+			print('{0} - {1} songs ({2} mins)'.format(str(row[0]).replace(' - Topic', ''), row[1], str(row[2]//60)), file = htmlreport)
 		else:
 			print('{0}'.format(str(row[0]).replace(' - Topic', '')), file = htmlreport)
 	print ("""</div></div><div class="column"><div class="minutes_title">Top Songs</div><div class="list">""", file = htmlreport)
@@ -220,7 +220,7 @@ def gen_html_report(cursor, data, analyzeYear):
 	for row in rows:
 		print ("<br>", file = htmlreport)
 		if moreDetails:
-			print ('{0} - {1} - {2} plays'.format(row[0], row[1], row[2]), file = htmlreport)
+			print ('{0} - {1} - {2} plays'.format(str(row[0]).replace(' - Topic', ''), row[1], row[2]), file = htmlreport)
 		else:
 			print ('{0}'.format(row[1]), file = htmlreport)
 	print ("""</div></div></div></div></div></body></html>""", file = htmlreport)
