@@ -5,13 +5,13 @@ import json
 import requests
 import re
 
-expect = datetime.datetime.now().year
+analyzeYear = datetime.datetime.now().year
 verbose = False
 duration = False
 log = open('log.dat', 'w', encoding="utf8")
 
 def flags():
-	opts, args = getopt.getopt(sys.argv[2:], "d:v", ["duration="])
+	opts, args = getopt.getopt(sys.argv[2:], "d:y:v", ["duration=", "year="])
 	for o, token in opts:
 		if o == "-v":
 			global verbose
@@ -21,11 +21,14 @@ def flags():
 			duration = True
 			global ytAPIkey
 			ytAPIkey = token
+		elif o in ("-y", "--year"):
+			global analyzeYear
+			analyzeYear = token
 
-def should_not_ignore(title, year, header, expect):
+def should_not_ignore(title, year, header, analyzeYear):
     if (header == "YouTube Music"):
         if (title[:7] == "Watched"):
-            if (year[:4] == str(expect)):
+            if (year[:4] == str(analyzeYear)):
                 return True
             else:
                 False
@@ -49,7 +52,7 @@ def open_file():
 def parse_json(file, cursor):
     json_object = json.load(file)
     for obj in json_object:
-        if (should_not_ignore(obj['title'], obj['time'], obj['header'], expect)):
+        if (should_not_ignore(obj['title'], obj['time'], obj['header'], analyzeYear)):
             if ('subtitles' in obj):
                 cursor.execute("""INSERT INTO songs(title, artist, year, url) VALUES(?, ?, ?, ?)""", (obj['title'][8:], obj['subtitles'][0]['name'], obj['time'], obj['titleUrl'][32:]))
             elif (('titleUrl' in obj) and (duration)):
@@ -187,10 +190,10 @@ def get_duration(cursor):
             error_rate = error_rate + 1
     return (total_duration, error_rate, song_count)
 
-def gen_html_report(cursor, data, expect):
-	htmlreport = open('report.html', 'w', encoding = ("utf8"))
+def gen_html_report(cursor, data, analyzeYear):
+	htmlreport = open('report_{0}.html'.format(str(analyzeYear)), 'w', encoding = ("utf8"))
 	print ("""<!DOCTYPE html><html><head><title>Wrapped</title><style type="text/css">body{background-color: #000000;}.center-div{position: absolute; margin: auto; top: 0; right: 0; bottom: 0; left: 0; width: 50%; height: 90%; background-color: #000000; border-radius: 3px; padding: 10px;}.ytm_logo{width: 15%;position: relative;top: 30px;left: 40px;}.title_logo{width: 30%;position: relative;top: 30px;left: 60px;}.right_title{position: absolute;font-family: "Product Sans";top: 55px;right: 10%;font-size: 2em;color: #ffffff;}.container{position: relative;top: 13%;left: 53px;}.minutes_title{font-family: "Product Sans";font-size: 2em;color: #ffffff;}.minutes{font-family: "Product Sans";font-size: 6em;color: #ffffff;}.row{display: flex;}.column{flex: 50%;}.list{font-family: "Roboto";font-size: 1.5em;line-height: 30px;color: #ffffff;}</style></head><body><div class="center-div"><img src="ytm_logo.png" class="ytm_logo"><img src="title.png" class="title_logo"/><span class="right_title">""", file = htmlreport)
-	print (str(expect), file = htmlreport)
+	print (str(analyzeYear), file = htmlreport)
 	print (""" Wrapped</span><div class="container"><div class="minutes_title">Minutes Listened</div><div class="minutes">""", file = htmlreport)
 	if duration:
 		print (str(data[0]//60), file = htmlreport)
@@ -211,7 +214,7 @@ def gen_html_report(cursor, data, expect):
 	print ("""</div></div></div></div></div></body></html>""", file = htmlreport)
 	htmlreport.close()
 
-def gen_report(cursor, data, expect):
+def gen_report(cursor, data, analyzeYear):
 	#Top 10 Report
 	report = open('report.dat', 'w', encoding=("utf8"))
 	print ("#################### Top Artists #####################", file = report)
@@ -235,7 +238,7 @@ def gen_report(cursor, data, expect):
 		print ('Error count : {0}'.format(data[1]), file = report)
 		print ('Error rate : {0}%'.format((float(data[1])/data[2])*100), file = report)
 	report.close()
-	gen_html_report(cursor, data, expect)
+	gen_html_report(cursor, data, analyzeYear)
 
 def main():
     flags()
@@ -265,7 +268,7 @@ def main():
         print_full_tops(cursor)
     log.close()
     print("Generating final report")
-    gen_report(cursor, data, expect)
+    gen_report(cursor, data, analyzeYear)
     conn.commit()
     conn.close()
     print("All done!")
