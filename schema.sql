@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS songs;
+DROP TABLE IF EXISTS artist_count;
+DROP TABLE IF EXISTS songs_count;
+DROP TABLE IF EXISTS report;
+
 CREATE TABLE IF NOT EXISTS songs(
 	id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 	artist TEXT,
@@ -8,11 +13,13 @@ CREATE TABLE IF NOT EXISTS songs(
 CREATE TABLE IF NOT EXISTS artist_count(
 	id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 	artist TEXT,
-	occurence int
+	occurence int,
+	duration int
 );
 CREATE TABLE IF NOT EXISTS songs_count(
 	id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 	title TEXT,
+	artist TEXT,
 	occurence int
 );
 CREATE TABLE IF NOT EXISTS report(
