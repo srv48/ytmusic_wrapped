@@ -1,6 +1,6 @@
 # YouTube Music Year Wrapper
 
-A fork of <a href="https://github.com/cinfulsinamon/ytmusic_wrapped">cinfulsinamon/ytmusic_wrapped</a> with the following modifications:
+This tool was updated in December 2020 by <a href="https://github.com/nirajsanghvi">nirajsanghvi (give him a big thanks!)</a> with the following modifications:
 
 * Optional `-m` parameter (best used in combination with `-d`) to show more details: total minutes played for top artists, and total number of plays and artist names for top songs
 * Optional `-y/--year` parameter to run the process for a specific year, report files are now suffixed with the year so you can easily generate and compare across years
