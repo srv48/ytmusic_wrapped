@@ -1,6 +1,6 @@
 ## To use YouTube Music Year Wrapper
 <br>
-You will need to install Python. I used 3.8.0 32bit, so use that version if you want to be super safe.
+You will need to install Python. I used 3.8.0 32 bit.
 Be sure to select the "Add python to PATH" option in the installer.
 <br>
 Once python is installed, open up a console and run `pip install requests` to get the required module for this script.
@@ -11,6 +11,7 @@ Extract the zip file somewhere you can point a terminal to it.
 <br>
 Then download a history file from Google My Activity containing your YouTube Watch History.
 
+Note - 64 bit version is absolutely fine too. (SRV)
 
 <br>
 
