@@ -1,22 +1,3 @@
-# YouTube Music Year Wrapper
-
-This tool was updated in December 2020 by <a href="https://github.com/nirajsanghvi">nirajsanghvi</a> (give him a big thanks!) with the following modifications:
-
-* Optional `-m` parameter (best used in combination with `-d`) to show more details: total minutes played for top artists, and total number of plays and artist names for top songs
-* Optional `-y/--year` parameter to run the process for a specific year, report files are now suffixed with the year so you can easily generate and compare across years
-* Generate a new database for each run (my db was erroneously stacking all the data when running different years back-to-back)
-* Remove the " - Topic" noise from the artist names (for some reason all my artists were getting suffixed with this)
-* Formatting fixes and connection cleanup
-
-
-Original description below:
-
-A spotify year wrap like for YouTube Music
-
-Note : This project is not endorsed by Google
-
-![example of a report](https://raw.githubusercontent.com/cinfulsinamon/ytmusic_wrapped/python3/example_report.png)
-
 ## To use YouTube Music Year Wrapper
 <br>
 You will need to install Python. I used 3.8.0 32bit, so use that version if you want to be super safe.
@@ -30,7 +11,7 @@ Extract the zip file somewhere you can point a terminal to it.
 <br>
 Then download a history file from Google My Activity containing your YouTube Watch History.
 
-### NOTE: You must either switch your account language to English so the script can properly match strings in your history file, or edit the script to match your language. Specifically, you must change the strings and indexes in the `should_not_ignore` function as well as the indexes in the `parse_json` function.
+
 <br>
 
 To download a history file: 
@@ -59,3 +40,24 @@ This is because your history file may contain entries which do not have a title 
 Your report will be available in report.html and report.dat. Note that it usually takes less than 1 minute to complete a report. However `-d` option can increase this.
 An HTML file with a report formatted like the image above will be generated in the same folder as the script.
 If you want the font to look correct, you'll have to download and install the Roboto and Product Sans fonts.
+
+
+# YouTube Music Year Wrapper
+
+This tool was updated in December 2020 by <a href="https://github.com/nirajsanghvi">nirajsanghvi</a> (give him a big thanks!) with the following modifications:
+
+* Optional `-m` parameter (best used in combination with `-d`) to show more details: total minutes played for top artists, and total number of plays and artist names for top songs
+* Optional `-y/--year` parameter to run the process for a specific year, report files are now suffixed with the year so you can easily generate and compare across years
+* Generate a new database for each run (my db was erroneously stacking all the data when running different years back-to-back)
+* Remove the " - Topic" noise from the artist names (for some reason all my artists were getting suffixed with this)
+* Formatting fixes and connection cleanup
+
+
+Original description below:
+
+A spotify year wrap like for YouTube Music
+
+Note : This project is not endorsed by Google
+
+![example of a report](https://raw.githubusercontent.com/cinfulsinamon/ytmusic_wrapped/python3/example_report.png)
+
