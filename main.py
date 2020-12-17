@@ -6,7 +6,7 @@ import json
 import requests
 import re
 
-analyzeYear = datetime.datetime.now().year
+analyzeYear = "2020"#datetime.datetime.now().year
 verbose = False
 duration = False
 moreDetails = False
@@ -233,9 +233,9 @@ def gen_html_report(cursor, data, analyzeYear):
         print("N/A", file=htmlreport)
     print("""</div><br><br><div class="row"><div class="column"><div class="minutes_title">Top Artists</div><div class="list">""", file=htmlreport)
     if duration:
-        cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by duration DESC LIMIT 10""")
+        cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by duration DESC LIMIT 20""")
     else:
-        cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by occurence DESC LIMIT 10""")
+        cursor.execute("""SELECT artist, occurence, duration FROM artist_count WHERE (occurence > 5) ORDER by occurence DESC LIMIT 20""")
     rows = cursor.fetchall()
     for row in rows:
         print("<br>", file=htmlreport)
@@ -249,7 +249,7 @@ def gen_html_report(cursor, data, analyzeYear):
                 ' - Topic', '')), file=htmlreport)
     print("""</div></div><div class="column"><div class="minutes_title">Top Songs</div><div class="list">""", file=htmlreport)
     cursor.execute(
-        """SELECT artist, title, occurence FROM songs_count ORDER by occurence DESC LIMIT 10""")
+        """SELECT artist, title, occurence FROM songs_count ORDER by occurence DESC LIMIT 20""")
     rows = cursor.fetchall()
     for row in rows:
         print("<br>", file=htmlreport)
@@ -313,7 +313,7 @@ def main():
     if duration:
         print("Getting durations. This may take a while.")
         data = get_duration(cursor)
-    print("Getting top 10's")
+    print("Getting top 20's")
     prepare_tops(cursor)
     if verbose:
         print_full_tops(cursor)
